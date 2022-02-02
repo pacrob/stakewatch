@@ -2,6 +2,15 @@ from web3 import Web3
 from flask import Flask, render_template, json
 from datetime import datetime
 
+from config import (
+    SOURCE_OF_TRUTH,
+    STAKERS,
+    BLOCK_THRESHOLDS,
+    PAGERDUTY_ALERT_URL,
+    PAGERDUTY_CHANGE_URL,
+    PAGERDUTY_INTEGRATION_KEY
+)
+
 app = Flask(__name__)
 
 def get_chain_info(url: str):
@@ -16,37 +25,46 @@ def get_chain_info(url: str):
 
     return connected, chain_id, latest_block
 
-with open("config.json", "r") as config:
-    data = json.load(config)
+WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
+START_TIME = datetime.now()
+truth = {"url": SOURCE_OF_TRUTH}
+
+stakers = []
+for k, v in STAKERS.items():
+    staker_data = { "url": v }
+    staker_data["nickname"] = k
+    staker_data["last_time_in_sync"] = START_TIME
+    staker_data["in_sync"] = True
+    staker_data["time_out_of_sync"] = START_TIME - START_TIME
+    stakers.append(staker_data)
+
+
 
 @app.route("/")
 def index():
 
-    warning, danger = data["block_thresholds"]["warning"], data["block_thresholds"]["danger"]
-
-    truth = data["source_of_truth"]
     truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
-
-    stakers = []
-    for staker in data["stakers"]:
-        staker_data = data["stakers"][staker]
-        staker_data["nickname"] = staker
-        stakers.append(staker_data)
+    current_time = datetime.now()
 
     for staker in stakers:
         staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
         
-        block_diff = truth["latest_block"] - staker["latest_block"]
-        if block_diff > danger:
-            staker["background"] = "bg-danger"
-        elif block_diff > warning:
-            staker["background"] = "bg-warning"
-        else:
-            staker["background"] = "bg-success"
-
+        if staker["connected"] and truth["connected"]:
+            block_diff = truth["latest_block"] - staker["latest_block"]
+            if block_diff > DANGER:
+                staker["background"] = "bg-danger"
+                staker["in_sync"] = False
+                staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
+            elif block_diff > WARNING:
+                staker["background"] = "bg-warning"
+                staker["in_sync"] = False
+                staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
+            else:
+                staker["background"] = "bg-success"
+                staker["last_time_in_sync"] = current_time
+                staker["in_sync"] = True
 
     print(f"{stakers=}")
-
     now = datetime.now()
     print(f"{now=}")
 

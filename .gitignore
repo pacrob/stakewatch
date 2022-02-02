@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 # stakewatch specfic
-config.json
+config.py
 
