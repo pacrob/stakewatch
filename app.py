@@ -1,21 +1,25 @@
+from datetime import datetime, timedelta
+from flask import Flask, render_template
 from web3 import Web3
-from flask import Flask, render_template, json
-from datetime import datetime
 
 from config import (
-    SOURCE_OF_TRUTH,
-    STAKERS,
     BLOCK_THRESHOLDS,
     PAGERDUTY_ALERT_URL,
-    PAGERDUTY_CHANGE_URL,
-    PAGERDUTY_INTEGRATION_KEY
+    PAGERDUTY_INTEGRATION_KEY,
+    SOURCE_OF_TRUTH,
+    STAKERS,
+    TIME_THRESHOLDS
 )
 
 app = Flask(__name__)
 
 def get_chain_info(url: str):
     w3 = Web3(Web3.HTTPProvider(url))
-    connected = w3.isConnected()
+    try:
+        connected = w3.isConnected()
+    except:
+        connected = False
+
     chain_id = "unknown"
     latest_block = "unknown"
     
@@ -25,6 +29,13 @@ def get_chain_info(url: str):
 
     return connected, chain_id, latest_block
 
+def send_pagerduty_alert(stakers: list[tuple], recently_alerted: dict):
+    for staker in stakers:
+        print(f'alerting {staker[0]} out of sync for {staker[1]}')
+        recently_alerted[staker[0]] = datetime.now()
+        print(f'adding {staker[0]} to recently_alerted')
+
+# setup
 WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
 START_TIME = datetime.now()
 truth = {"url": SOURCE_OF_TRUTH}
@@ -35,16 +46,20 @@ for k, v in STAKERS.items():
     staker_data["nickname"] = k
     staker_data["last_time_in_sync"] = START_TIME
     staker_data["in_sync"] = True
-    staker_data["time_out_of_sync"] = START_TIME - START_TIME
+    staker_data["time_out_of_sync"] = timedelta(0)
     stakers.append(staker_data)
 
+# keep track of stakers still within the repeat_alert threshold
+recently_alerted = {}
 
-
+# this route automatically refreshes based on the number of seconds set in layout.html
+# specfically the content value in this line: "<meta http-equiv="refresh" content="30">"
 @app.route("/")
 def index():
 
     truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
     current_time = datetime.now()
+    alerts_to_send = []
 
     for staker in stakers:
         staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
@@ -64,9 +79,28 @@ def index():
                 staker["last_time_in_sync"] = current_time
                 staker["in_sync"] = True
 
-    print(f"{stakers=}")
+        if staker["time_out_of_sync"] > timedelta(minutes=TIME_THRESHOLDS["initial_alert"]):
+            if staker["nickname"] not in recently_alerted.keys():
+                alerts_to_send.append((staker["nickname"], staker["time_out_of_sync"]))
+
+    # send alerts
+    send_pagerduty_alert(alerts_to_send, recently_alerted)
+
+    # clear recently_alerted that are past the repeat threshold
     now = datetime.now()
-    print(f"{now=}")
+    recently_alerted_to_reset = []
+    for k, v in recently_alerted.items():
+        if abs(v - now) > timedelta(minutes=TIME_THRESHOLDS["repeat_alert"]):
+            recently_alerted_to_reset.append(k)
+            print(f'adding {k} to be deleted from recently alerted')
+
+    for staker in recently_alerted_to_reset:
+        del recently_alerted[staker]
+        print(f'deleting {k} from recently alerted')
+
+
+    # print(f"{stakers=}")
+    # print(f"{now=}")
 
     return render_template(
         "index.html",
