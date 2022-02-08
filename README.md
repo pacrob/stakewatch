@@ -4,7 +4,7 @@ webapp for watching stake boxes
 ## To Run
 1) Set up your virtualenv with from requirements.txt
 2) Rename `sample_config.py` to `config.py`
-3) In `config.py`, enter the urls for your source of truth and the boxes you want to watch
+3) In `config.py`, add/remove/rename your `STAKERS` and enter urls for them and your `SOURCE_OF_TRUTH`
 4) In `config.py`, adjust the `BLOCK_THRESHOLDS` and `TIME_THRESHOLDS` to your preference
 5) At the command line:
 ```
