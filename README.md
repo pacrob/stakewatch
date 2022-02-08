@@ -2,7 +2,13 @@
 webapp for watching stake boxes
 
 ## To Run
-1) Set up your virtualenv with from requirements.txt
+1) Set up a new virtualenv with from the requirements.txt, e.g.:
+```
+$ pip install virtualenv 
+$ virtualenv venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+```
 2) Rename `sample_config.py` to `config.py`
 3) In `config.py`, add/remove/rename your `STAKERS` and enter urls for them and your `SOURCE_OF_TRUTH`
 4) In `config.py`, adjust the `BLOCK_THRESHOLDS` and `TIME_THRESHOLDS` to your preference
