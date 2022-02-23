@@ -24,20 +24,21 @@ def get_chain_info(url: str):
 
     return connected, chain_id, latest_block
 
-def send_pagerduty_alert(stakers: list[tuple], recently_alerted: dict):
-    alert = {
-        "payload": {
-            "summary": "stakers out of sync",
-            "source": "stakewatch",
-            "severity": "error",
-        },
-        "routing_key": PAGERDUTY_INTEGRATION_KEY,
-        "event_action": "trigger",
-    }
+def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: bool):
+    if use_pagerduty:
+        alert = {
+            "payload": {
+                "summary": "stakers out of sync",
+                "source": "stakewatch",
+                "severity": "error",
+            },
+            "routing_key": PAGERDUTY_INTEGRATION_KEY,
+            "event_action": "trigger",
+        }
 
-    alert_json = json.dumps(alert, indent=2)
-    r = requests.post(PAGERDUTY_ALERT_URL, data=alert_json)
-    print(f'{r=}')
+        alert_json = json.dumps(alert, indent=2)
+        r = requests.post(PAGERDUTY_ALERT_URL, data=alert_json)
+    # print(f'{r=}')
     for staker in stakers:
         print(f'alerting {staker[0]} out of sync for {staker[1]}')
         recently_alerted[staker[0]] = datetime.now()

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template
 from helper_functions import (
     get_chain_info,
-    send_pagerduty_alert
+    send_alerts
 )
 
 from config import (
@@ -11,6 +11,8 @@ from config import (
     STAKERS,
     TIME_THRESHOLDS,
 )
+
+use_pagerduty = False
 
 app = Flask(__name__)
 
@@ -64,7 +66,8 @@ def index():
 
     # send alerts
     if len(alerts_to_send) > 0:
-        send_pagerduty_alert(alerts_to_send, recently_alerted)
+        send_alerts(alerts_to_send, recently_alerted, use_pagerduty)
+
 
     # clear recently_alerted that are past the repeat threshold
     now = datetime.now()
@@ -80,7 +83,7 @@ def index():
 
 
     # print(f"{stakers=}")
-    print(f"{now=}")
+    # print(f"{now=}")
 
     return render_template(
         "index.html",
