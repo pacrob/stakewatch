@@ -15,6 +15,7 @@ $ pip install -r requirements.txt
 5) The webpage is set to automatically refresh every 30 seconds
     - This can be changed by editing the `content` value of the following line in templates/layout.html:
     - `<meta http-equiv="refresh" content="30">`
+6) The `use_pagerduty` flag in `app.py` determines if alert information is sent to PagerDuty. To enable it, set the flag to `True` and get the PagerDuty Integration Key from your account and enter it in `config.py`.
 6) At the command line:
 ```
 $ export FLASK_ENV=development
