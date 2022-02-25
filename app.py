@@ -83,7 +83,7 @@ def index():
 
 
     # print(f"{stakers=}")
-    # print(f"{now=}")
+    print(f"{now=}")
 
     return render_template(
         "index.html",
