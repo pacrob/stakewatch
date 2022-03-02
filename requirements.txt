@@ -1,2 +1,4 @@
+wheel
 web3
 flask
+uwsgi
