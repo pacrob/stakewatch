@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from tkinter import W
 from flask import Flask, render_template
 
 from config import (
@@ -11,43 +12,87 @@ from config import (
 app = Flask(__name__)
 
 # setup
-WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
-START_TIME = datetime.now()
-truth = {"url": SOURCE_OF_TRUTH}
+# WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
+# START_TIME = datetime.now()
+# truth = {"url": SOURCE_OF_TRUTH}
 
 stakers = []
 for k, v in STAKERS.items():
     staker_data = { "url": v }
     staker_data["nickname"] = k
-    staker_data["last_time_in_sync"] = START_TIME
     staker_data["in_sync"] = False
     staker_data["time_out_of_sync"] = timedelta(0)
     stakers.append(staker_data)
 
+import sqlalchemy as db
 
-def read_staker_info_from_db():
-    print('running update_stake_info')
-    truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
-    current_time = datetime.now()
-    alerts_to_send = []
+engine = db.create_engine('sqlite:////db/stakewatch.db?'
+                          'check_same_thread=false')
+# connection = engine.connect()
+metadata = db.MetaData()
 
-    for staker in stakers:
-        staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
+def read_from_db():
+    print('running read_from_db')
+    
+    stakewatch = db.Table('stakewatch', metadata, autoload=True, autoload_with=engine)
+    
+    with engine.connect() as conn:
+        result = conn.execute(
+            db.select([stakewatch.c.nickname.distinct()])
+        )
+            
+        print(result)
         
-        if staker["connected"] and truth["connected"]:
-            block_diff = truth["latest_block"] - staker["latest_block"]
-            if block_diff > DANGER:
-                staker["background"] = "bg-danger"
-                staker["in_sync"] = False
-                staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
-            elif block_diff > WARNING:
-                staker["background"] = "bg-warning"
-                staker["in_sync"] = False
-                staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
-            else:
-                staker["background"] = "bg-success"
-                staker["last_time_in_sync"] = current_time
-                staker["in_sync"] = True
+    print(result)
+    # inst = db.inspect(stakewatch)
+    # attr_names = [c_attr.key for c_attr in inst.mapper.column_attrs]
+    # print(f'{attr_names=}')
+    # query = db.select([stakewatch]).order_by(stakewatch.c.id.desc()).limit(5)
+    # max_id_query = db.select([db.func.max(stakewatch.columns.id)])
+    # max_proxy = connection.execute(max_id_query)
+    # max_result = max_proxy.fetchall()
+
+    # print(f'{max_result=}')
+    # s = stakewatch.select()
+    # # conn = engine.connect()
+    # result = connection.execute(s)
+
+    # # query = db.select([stakewatch])
+    # # ResultProxy = connection.execute(query)
+    # # result = ResultProxy.fetchall()
+
+    # for x in result:
+    #     # d = {}
+    #     print('am here')
+    #     print('type of result = ', type(result))
+    #     print(x)
+
+    # convert db data to dict
+    
+    truth = 'hello'
+    stakers = ['hello', 'hello']
+    return truth, stakers, result
+    # truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
+    # current_time = datetime.now()
+    # alerts_to_send = []
+
+    # for staker in stakers:
+    #     staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
+        
+    #     if staker["connected"] and truth["connected"]:
+    #         block_diff = truth["latest_block"] - staker["latest_block"]
+    #         if block_diff > DANGER:
+    #             staker["background"] = "bg-danger"
+    #             staker["in_sync"] = False
+    #             staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
+    #         elif block_diff > WARNING:
+    #             staker["background"] = "bg-warning"
+    #             staker["in_sync"] = False
+    #             staker["time_out_of_sync"] = current_time - staker["last_time_in_sync"]
+    #         else:
+    #             staker["background"] = "bg-success"
+    #             staker["last_time_in_sync"] = current_time
+    #             staker["in_sync"] = True
 
         # if staker["time_out_of_sync"] > timedelta(minutes=TIME_THRESHOLDS["initial_alert"]):
         #     if staker["nickname"] not in recently_alerted.keys():
@@ -82,10 +127,9 @@ def read_staker_info_from_db():
 @app.route("/")
 def index():
 
+    truth, stakers, result = read_from_db()
+    print('now down here', result)
 
-
-    print(f"{stakers=}")
-    # print(f"{recently_alerted=}")
     now = datetime.now()
     return render_template(
         "index.html",
