@@ -131,3 +131,4 @@ dmypy.json
 # stakewatch specfic
 config.py
 
+stakewatch.db

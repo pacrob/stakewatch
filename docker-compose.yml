@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  flask-app:
+    build: flask-app
+    ports:
+      - "5000:80"
+    volumes:
+      - ./stakewatch_db/:/db/
+  provider-checker:
+    build: provider-checker
+    volumes:
+      - ./stakewatch_db/:/db/
