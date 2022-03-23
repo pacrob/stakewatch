@@ -59,7 +59,16 @@ def read_from_db():
         
     def parse_db_rows(rows):
         # rows is a list of db rows as tuples
-        keys = ['id', 'url', 'nickname', 'connected', 'chain_id', 'latest_block', 'time_stamp']
+        keys = ['id',
+                'url',
+                'nickname',
+                'connected',
+                'chain_id',
+                'latest_block',
+                'time_stamp',
+                'blocks_out_of_sync'
+                'ui_background'
+               ]
         records = []
         for row in rows:
             new_record = {}

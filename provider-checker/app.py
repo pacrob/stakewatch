@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from time import time, sleep
+from tkinter import W
 from helper_functions import (
     get_chain_info,
     send_alerts
@@ -41,11 +42,28 @@ def main_event():
     # get info from truth provider
     truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
     truth["time_stamp"]= datetime.now()
+    truth["blocks_out_of_sync"] = 0
+    truth["ui_background"] = "bg-primary"
 
     # get info from stakers
     for staker in stakers:
         staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
         staker["time_stamp"] = datetime.now()
+        try:
+            staker["blocks_out_of_sync"] = int(truth["latest_block"]) - int(staker["latest_block"])
+        except:
+            staker["blocks_out_of_sync"] = 'unknown'
+        
+        if staker["blocks_out_of_sync"] == 'unknown':
+            staker["ui_background"] = "bg-danger"
+        elif staker["blocks_out_of_sync"] < WARNING:
+            staker["ui_background"] = "bg-primary"
+        elif staker["blocks_out_of_sync"] < DANGER:
+            staker["ui_background"] = "bg-warning"
+        else:
+            staker["ui_background"] = "bg-danger"
+            
+
         
     stakers.append(truth)
 
@@ -84,7 +102,7 @@ def main_event():
     #     del recently_alerted[staker]
     #     print(f'deleting {k} from recently alerted')
         
-    print(f'{stakers=}')
+    print(f'{stakers=}', flush=True)
     # print(f'{recently_alerted=}')
 
 starttime = time()
