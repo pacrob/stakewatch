@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from tkinter import W
+from weakref import proxy
 from flask import Flask, render_template
 
 from config import (
@@ -26,24 +27,40 @@ for k, v in STAKERS.items():
 
 import sqlalchemy as db
 
-engine = db.create_engine('sqlite:////db/stakewatch.db?'
-                          'check_same_thread=false')
-# connection = engine.connect()
-metadata = db.MetaData()
+
 
 def read_from_db():
-    print('running read_from_db')
-    
+    print('running read_from_db', flush=True)
+    engine = db.create_engine('sqlite:////db/stakewatch.db?'
+                              'check_same_thread=false')
+    connection = engine.connect()
+    metadata = db.MetaData()
     stakewatch = db.Table('stakewatch', metadata, autoload=True, autoload_with=engine)
+
+    def run_query(query):
+        proxy_result = connection.execute(query)
+        result = proxy_result.fetchall()
+        return result
+
+
+    max_id_query = db.select([db.func.sum(stakewatch.c.id)])
+    max_id_return = run_query(max_id_query)
+    max_id = max_id_return[0][0]  # max_id_return is a list of a tuple
+    print(f'{max_id=}', flush=True)
+
+    #most_recent_2_query = db.select([stakewatch].where)
     
-    with engine.connect() as conn:
-        result = conn.execute(
-            db.select([stakewatch.c.nickname.distinct()])
-        )
+    #query = db.select([stakewatch.c.nickname.distinct()])
+
+    # with engine.connect() as conn:
+    #     result = conn.execute(
+    #         # db.select([stakewatch.c.nickname.distinct()])
+    #         db.select([stakewatch])
+    #     )
             
-        print(result)
-        
-    print(result)
+    #     print(result, flush=True)
+    result = 'pants'    
+    print(result, flush=True)
     # inst = db.inspect(stakewatch)
     # attr_names = [c_attr.key for c_attr in inst.mapper.column_attrs]
     # print(f'{attr_names=}')
@@ -128,7 +145,7 @@ def read_from_db():
 def index():
 
     truth, stakers, result = read_from_db()
-    print('now down here', result)
+    print('now down here', result, flush=True)
 
     now = datetime.now()
     return render_template(
