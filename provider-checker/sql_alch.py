@@ -29,6 +29,8 @@ def connect_to_db():
                            Column('chain_id', Integer, default=None),
                            Column('latest_block', Integer, default=None),
                            Column('time_stamp', DateTime),
+                           Column('blocks_out_of_sync', Integer),
+                           Column('ui_background', String),
                        )
     
     metadata.create_all(engine)

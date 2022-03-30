@@ -48,8 +48,8 @@ def read_from_db():
     max_id_query = db.select([db.func.max(stakewatch.c.id)])
     max_id_return = run_query(max_id_query)
     max_id = max_id_return[0][0]  # max_id_return is a list of a tuple
-    print(f'{max_id=}', flush=True)
-    print(type(max_id), flush=True)
+    # print(f'{max_id=}', flush=True)
+    # print(type(max_id), flush=True)
     
     top_ten_query = db.select([stakewatch]).where(stakewatch.c.id > (max_id - 10))
     top_ten_return = run_query(top_ten_query)
@@ -66,13 +66,15 @@ def read_from_db():
                 'chain_id',
                 'latest_block',
                 'time_stamp',
-                'blocks_out_of_sync'
-                'ui_background'
+                'blocks_out_of_sync',
+                'ui_background',
                ]
         records = []
         for row in rows:
             new_record = {}
             for idx, key_name in enumerate(keys):
+                # print(f'{idx=}', flush=True)
+                # print(f'{key_name=}', flush=True)
                 new_record[key_name] = row[idx]
 
             records.append(new_record)
@@ -81,7 +83,8 @@ def read_from_db():
 
     parsed_rows = parse_db_rows(top_ten_return) 
 
-    sorted_rows = sorted(parsed_rows, key=(operator.itemgetter("time_stamp")))
+    sorted_rows = sorted(parsed_rows, key=(operator.itemgetter('time_stamp')))
+    # sorted_rows = sorted(parsed_rows, key="time_stamp")
     # for x in sorted_rows:
     #     print(x["time_stamp"], flush=True) 
         
@@ -92,7 +95,7 @@ def read_from_db():
             unique_stakers.add(x['nickname'])
             most_recent_rows.append(x)
 
-    print(most_recent_rows, flush=True)
+    # print(most_recent_rows, flush=True)
     truth = list(filter(lambda x: x['nickname'] == 'truth', most_recent_rows))
     stakers = list(filter(lambda x: x['nickname'] != 'truth', most_recent_rows))
     print(f'{truth=}', flush=True)
