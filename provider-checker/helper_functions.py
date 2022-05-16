@@ -24,6 +24,7 @@ def get_chain_info(url: str):
         chain_id = w3.eth.chain_id
         latest_block = w3.eth.block_number
 
+    connected = 1 if connected else 0
     return connected, chain_id, latest_block
 
 def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: bool):

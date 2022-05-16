@@ -20,30 +20,24 @@ from config import (
     BLOCK_THRESHOLDS,
 )
 
-DELAY_BETWEEN_PROVIDER_CHECKS = 30 
+DELAY_BETWEEN_PROVIDER_CHECKS = 5 
 
 use_pagerduty = False
 
-@dataclass
-class StatusCheck:
-    url: str
-    nickname: str
-    connected: bool
-    chain_id: int
-    latest_block: int
-    timestamp: datetime
-    blocks_out_of_sync: int
-    ui_background: str
+# @dataclass
+# class StatusCheck:
+#     url: str
+#     nickname: str
+#     connected: bool
+#     chain_id: int
+#     latest_block: int
+#     timestamp: datetime
+#     blocks_out_of_sync: int
+#     ui_background: str
 
 
 WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
 truth = {"url": SOURCE_OF_TRUTH, "nickname": "truth"}
-
-stakers = []
-for k, v in STAKERS.items():
-    staker_data = { "url": v }
-    staker_data["nickname"] = k
-    stakers.append(staker_data)
 
 # keep track of stakers still within the repeat_alert threshold
 recently_alerted = {}
@@ -51,16 +45,21 @@ recently_alerted = {}
 table, connection, metadata = connect_to_db()
 
 def main_event():
+    stakers = []
+    for k, v in STAKERS.items():
+        staker_data = { "url": v }
+        staker_data["nickname"] = k
+        stakers.append(staker_data)
     # get info from truth provider
     truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
-    truth["time_stamp"] = datetime.now()
+    truth["time_stamp"] = str(datetime.now())
     truth["blocks_out_of_sync"] = 0
     truth["ui_background"] = "bg-primary"
 
     # get info from stakers
     for staker in stakers:
         staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
-        staker["time_stamp"] = datetime.now()
+        staker["time_stamp"] = str(datetime.now())
         if staker["connected"]:
             staker["blocks_out_of_sync"] = int(truth["latest_block"]) - int(staker["latest_block"])
             if staker["blocks_out_of_sync"] < WARNING:
@@ -78,7 +77,12 @@ def main_event():
     stakers.append(truth)
 
     # write truth and staker info to db
-    write_to_db(table, connection, metadata, stakers)
+    # print(stakers, flush=True)
+    str_stakers = str(stakers)
+    dict_stakers = [{'providers_blob': str_stakers}]
+    # print(type(str_stakers), flush=True)
+    write_to_db(table, connection, metadata, dict_stakers)
+
     
     # TODO determine if stakers are out of sync & send alerts
     # for x in stakers[0]: print(x, flush=True) 
@@ -86,6 +90,6 @@ def main_event():
 
 starttime = time()
 while True:
-    print("tick")
+    print("tick", flush=True)
     main_event()
     sleep(DELAY_BETWEEN_PROVIDER_CHECKS - ((time() - starttime) % DELAY_BETWEEN_PROVIDER_CHECKS))

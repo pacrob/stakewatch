@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
-from tkinter import W
-from weakref import proxy
 from flask import Flask, render_template
+import json
 
 import operator
 
@@ -34,12 +33,27 @@ def read_from_db():
     # print(f'{max_id=}', flush=True)
     # print(type(max_id), flush=True)
     
-    top_ten_query = db.select([stakewatch]).where(stakewatch.c.id > (max_id - 10))
-    top_ten_return = run_query(top_ten_query)
-    # print(f'{top_ten_return=}')
-    # for x in top_ten_return:
-    #     print(x[2:5], flush=True) 
+    latest_row_query = db.select([stakewatch]).where(stakewatch.c.id == max_id)
+    # top_ten_query = db.select([stakewatch]).where(stakewatch.c.id > (max_id - 10))
+    all_query = db.select([stakewatch])
+
+    latest_row = run_query(latest_row_query)
         
+    print(f'{latest_row=}', flush=True)
+    
+    json_string = latest_row[0][1]
+
+    # print(f'type of json_string {type(json_string)}, json_string {json_string=}', flush=True)
+    json_string = json_string.replace("\'", "\"")
+    print(f'{json_string=}', flush=True)
+
+    stakers = json.loads(json_string)
+    print(f'type of stakers {type(stakers)}, stakers {stakers=}', flush=True)
+    # for x in stakers:
+    #     print(x, flush=True)
+
+    
+
     def parse_db_rows(rows):
         # rows is a list of db rows as tuples
         keys = ['id',
@@ -64,7 +78,8 @@ def read_from_db():
         
         return records
 
-    parsed_rows = parse_db_rows(top_ten_return) 
+
+    parsed_rows = parse_db_rows(latest_row) 
 
     sorted_rows = sorted(parsed_rows, key=(operator.itemgetter('time_stamp')))
     # sorted_rows = sorted(parsed_rows, key="time_stamp")
