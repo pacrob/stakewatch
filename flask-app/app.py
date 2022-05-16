@@ -1,20 +1,13 @@
 from datetime import datetime, timedelta
-from tkinter import W
 from flask import Flask, render_template
 
+import sys
+
 from config import (
-    BLOCK_THRESHOLDS,
-    SOURCE_OF_TRUTH,
     STAKERS,
-    TIME_THRESHOLDS,
 )
 
 app = Flask(__name__)
-
-# setup
-# WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
-# START_TIME = datetime.now()
-# truth = {"url": SOURCE_OF_TRUTH}
 
 stakers = []
 for k, v in STAKERS.items():
@@ -32,7 +25,7 @@ engine = db.create_engine('sqlite:////db/stakewatch.db?'
 metadata = db.MetaData()
 
 def read_from_db():
-    print('running read_from_db')
+    print('running read_from_db', file=sys.stderr)
     
     stakewatch = db.Table('stakewatch', metadata, autoload=True, autoload_with=engine)
     
@@ -41,8 +34,9 @@ def read_from_db():
             db.select([stakewatch.c.nickname.distinct()])
         )
             
-        print(result)
-        
+        print(result, file=sys.stderr)
+        for row in result:
+            print(row, file=sys.stderr) 
     print(result)
     # inst = db.inspect(stakewatch)
     # attr_names = [c_attr.key for c_attr in inst.mapper.column_attrs]
