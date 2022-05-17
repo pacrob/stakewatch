@@ -1,11 +1,12 @@
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from web3 import Web3
 
 import sys
 sys.path.append("..")
 from config import (
+    BLOCK_THRESHOLDS,
     PAGERDUTY_ALERT_URL,
     PAGERDUTY_INTEGRATION_KEY,
 )
@@ -47,5 +48,16 @@ def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: boo
         recently_alerted[staker[0]] = datetime.now()
         print(f'adding {staker[0]} to recently_alerted')
         
-def get_formatted_datetime():
-    return str(datetime.now().replace(microsecond=0))
+def format_datetime(dt_object):
+    if type(dt_object) == datetime:
+        return str(dt_object.replace(microsecond=0))
+    elif type(dt_object) == timedelta:
+        return str(dt_object)
+    
+def set_ui_background(blocks_out_of_sync):
+    if blocks_out_of_sync < BLOCK_THRESHOLDS["warning"]:
+        return "bg-primary"
+    elif blocks_out_of_sync < BLOCK_THRESHOLDS["danger"]:
+        return "bg-warning"
+    else:
+        return "bg-danger"
