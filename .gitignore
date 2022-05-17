@@ -130,5 +130,7 @@ dmypy.json
 
 # stakewatch specfic
 config.py
-
 stakewatch.db
+.vscode
+stakewatch.ini
+wsgi.py
