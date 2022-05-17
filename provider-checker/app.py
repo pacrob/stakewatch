@@ -4,6 +4,7 @@ from time import time, sleep
 from tkinter import W
 from helper_functions import (
     get_chain_info,
+    get_formatted_datetime,
     send_alerts
 )
 
@@ -20,21 +21,9 @@ from config import (
     BLOCK_THRESHOLDS,
 )
 
-DELAY_BETWEEN_PROVIDER_CHECKS = 5 
+DELAY_BETWEEN_PROVIDER_CHECKS = 30 
 
 use_pagerduty = False
-
-# @dataclass
-# class StatusCheck:
-#     url: str
-#     nickname: str
-#     connected: bool
-#     chain_id: int
-#     latest_block: int
-#     timestamp: datetime
-#     blocks_out_of_sync: int
-#     ui_background: str
-
 
 WARNING, DANGER = BLOCK_THRESHOLDS["warning"], BLOCK_THRESHOLDS["danger"]
 truth = {"url": SOURCE_OF_TRUTH, "nickname": "truth"}
@@ -52,14 +41,14 @@ def main_event():
         stakers.append(staker_data)
     # get info from truth provider
     truth["connected"], truth["chain_id"], truth["latest_block"] = get_chain_info(truth["url"])
-    truth["time_stamp"] = str(datetime.now())
+    truth["time_stamp"] = get_formatted_datetime()
     truth["blocks_out_of_sync"] = 0
     truth["ui_background"] = "bg-primary"
 
     # get info from stakers
     for staker in stakers:
         staker["connected"], staker["chain_id"], staker["latest_block"] = get_chain_info(staker["url"])
-        staker["time_stamp"] = str(datetime.now())
+        staker["time_stamp"] = get_formatted_datetime()
         if staker["connected"]:
             staker["blocks_out_of_sync"] = int(truth["latest_block"]) - int(staker["latest_block"])
             if staker["blocks_out_of_sync"] < WARNING:

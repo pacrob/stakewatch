@@ -46,3 +46,6 @@ def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: boo
         print(f'alerting {staker[0]} out of sync for {staker[1]}')
         recently_alerted[staker[0]] = datetime.now()
         print(f'adding {staker[0]} to recently_alerted')
+        
+def get_formatted_datetime():
+    return str(datetime.now().replace(microsecond=0))

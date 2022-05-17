@@ -10,6 +10,7 @@
       <div>Connected: {{ source_of_truth["connected"] }}</div>
       <div>Chain ID: {{ source_of_truth["chain_id"] }}</div>
       <div>Latest Block: {{ source_of_truth["latest_block"] }}</div>
+      <div>Timestamp: {{ source_of_truth["time_stamp"] }}</div>
     </div>
   </div>
 </div>
@@ -23,6 +24,7 @@
         <div>Connected: {{  'True' if staker["connected"] else 'False' }}</div>
         <div>Chain ID: {{ staker["chain_id"] }}</div>
         <div>Latest Block: {{ staker["latest_block"] }}</div>
+        <div>Timestamp: {{ staker["time_stamp"] }}</div>
         <div>Blocks Out of Sync: {{ staker["blocks_out_of_sync"] }}</div>
         <div>Time Out Of Sync: {{ staker["time_out_of_sync"] }}</div>
         <div>Last Time In-Sync: {{ staker["last_time_in_sync"] }}</div>
