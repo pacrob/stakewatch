@@ -9,6 +9,7 @@ from config import (
     BLOCK_THRESHOLDS,
     PAGERDUTY_ALERT_URL,
     PAGERDUTY_INTEGRATION_KEY,
+    TIME_THRESHOLD,
 )
 
 def get_chain_info(url: str):
@@ -28,7 +29,7 @@ def get_chain_info(url: str):
     connected = 1 if connected else 0
     return connected, chain_id, latest_block
 
-def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: bool):
+def send_alerts(out_of_sync_stakers: list[tuple], recently_alerted: dict, use_pagerduty: bool):
     if use_pagerduty:
         alert = {
             "payload": {
@@ -43,10 +44,20 @@ def send_alerts(stakers: list[tuple], recently_alerted: dict, use_pagerduty: boo
         alert_json = json.dumps(alert, indent=2)
         r = requests.post(PAGERDUTY_ALERT_URL, data=alert_json)
     # print(f'{r=}')
-    for staker in stakers:
-        print(f'alerting {staker[0]} out of sync for {staker[1]}')
-        recently_alerted[staker[0]] = datetime.now()
-        print(f'adding {staker[0]} to recently_alerted')
+    print('send_alerts called', flush=True) 
+    print(f'{out_of_sync_stakers=}', flush=True)
+    print(f'{recently_alerted=}', flush=True)
+
+    for staker in out_of_sync_stakers:
+        if staker["nickname"] not in recently_alerted.keys():
+            print(f'alerting {staker["nickname"]} out of sync for {staker["time_out_of_sync"]}', flush=True)
+            recently_alerted[staker["nickname"]] = datetime.now()
+            print(f'adding {staker["nickname"]} to recently_alerted', flush=True)
+
+        else:
+            if datetime.now() - recently_alerted[staker["nickname"]] > timedelta(minutes=TIME_THRESHOLD):
+                del recently_alerted[staker["nickname"]]
+                print(f'removing {staker["nickname"]} from recently_alerted', flush=True)
         
 def format_datetime(dt_object):
     if type(dt_object) == datetime:

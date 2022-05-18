@@ -36,6 +36,7 @@ table, connection, metadata = connect_to_db()
 
 def main_event(previous_run, recently_alerted):
     stakers = []
+    out_of_sync_stakers = []
     for k, v in STAKERS.items():
         staker_data = { "url": v }
         staker_data["nickname"] = k
@@ -64,6 +65,9 @@ def main_event(previous_run, recently_alerted):
                 staker["last_time_in_sync"] = last_time_in_sync
 
                 time_diff_since_last = datetime.strptime(staker["time_stamp"], "%Y-%m-%d %H:%M:%S") - datetime.strptime(last_time_in_sync, "%Y-%m-%d %H:%M:%S") 
+                
+                # while it's still a timedelta object, append to out_of_sync_stakers
+                out_of_sync_stakers.append((staker["nickname"], time_diff_since_last))
                 staker["time_out_of_sync"] = format_datetime(time_diff_since_last)
             else:
                 staker["last_time_in_sync"] = format_datetime(datetime.min)
@@ -72,6 +76,10 @@ def main_event(previous_run, recently_alerted):
             staker["blocks_out_of_sync"] = 'unknown'
             staker["ui_background"] = set_ui_background(DANGER)
             staker["last_time_in_sync"] = format_datetime(datetime.min)
+            staker["time_out_of_sync"] = format_datetime(datetime.strptime(staker["time_stamp"], "%Y-%m-%d %H:%M:%S") - datetime.min)
+
+            
+
 
         
     previous_run = stakers.copy()
@@ -82,9 +90,9 @@ def main_event(previous_run, recently_alerted):
     write_to_db(table, connection, metadata, dict_stakers)
 
     
-    # TODO determine if stakers are out of sync & send alerts
-    # for x in stakers[0]: print(x, flush=True) 
-    # print(f'{stakers=}', flush=True)
+    # pass out-of-sync stakers + recently_alerted + use_pagerduty to send_alerts function
+    send_alerts(out_of_sync_stakers, recently_alerted, use_pagerduty)
+    
 
 starttime = time()
 while True:
